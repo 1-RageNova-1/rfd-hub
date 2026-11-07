@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 
 let state = {
   username: localStorage.getItem("hub_user") || "",
-  apiBase: "http://127.0.0.1:50201",
+  apiBase: "http://185.45.149.193:50201",
   avatar: null,
 };
 

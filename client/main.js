@@ -9,7 +9,7 @@ function loadCfg() {
   try {
     return JSON.parse(fs.readFileSync(cfgPath, "utf8"));
   } catch {
-    return { apiBase: "http://127.0.0.1:50201", rfdPath: "" };
+    return { apiBase: "http://185.45.149.193:50201", rfdPath: "" };
   }
 }
 
