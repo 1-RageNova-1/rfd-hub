@@ -228,7 +228,7 @@ $("btn-refresh-av").onclick = () => {
   loadAvatar(u);
 };
 
-$("btn-open-settings").onclick = async () => {
+const openSettings = async () => {
   $("modal").classList.remove("hidden");
   const b = bridge();
   if (b) {
@@ -239,10 +239,12 @@ $("btn-open-settings").onclick = async () => {
     } catch (_) {}
   }
 };
+const closeSettings = () => $("modal").classList.add("hidden");
+if ($("btn-settings")) $("btn-settings").onclick = openSettings;
+if ($("set-close")) $("set-close").onclick = closeSettings;
+if ($("set-close-2")) $("set-close-2").onclick = closeSettings;
 
-$("btn-close-settings").onclick = () => $("modal").classList.add("hidden");
-
-$("btn-save-settings").onclick = async () => {
+if ($("set-save")) $("set-save").onclick = async () => {
   const apiBase = $("set-api").value.trim().replace(/\/$/, "");
   const rfdPath = $("set-rfd").value.trim();
   state.apiBase = apiBase;
