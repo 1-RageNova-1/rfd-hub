@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RFD Hub Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #1a1a1a; color: #eee; margin: 0; padding: 24px; }
+    h1 { margin-top: 0; }
+    input, textarea, button { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #eee; }
+    button { cursor: pointer; background: #e11; border-color: #c00; }
+    button.secondary { background: #333; border-color: #555; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #222; }
+    .muted { color: #888; font-size: 0.9rem; }
+    #tokenBox { min-width: 280px; }
+    #status { min-height: 1.2em; color: #8f8; margin: 8px 0; }
+    #status.err { color: #f66; }
+  </style>
+</head>
+<body>
+  <h1>RFD Hub — Admin</h1>
+  <p class="muted">Token must match server <code>ADMIN_TOKEN</code>. Games with visible=false stay hidden from players.</p>
+
+  <div class="row">
+    <input id="tokenBox" type="password" placeholder="Admin token" />
+    <button type="button" class="secondary" id="saveToken">Save token</button>
+    <button type="button" id="reload">Reload games</button>
+  </div>
+  <p id="status" class="muted"></p>
+
+  <h2>Add game</h2>
+  <div class="row">
+    <input id="name" placeholder="Name" />
+    <input id="host" placeholder="Host IP" value="127.0.0.1" />
+    <input id="webPort" placeholder="Web port" value="50565" style="width:100px" />
+    <input id="rccPort" placeholder="RCC port" value="50132" style="width:100px" />
+  </div>
+  <div class="row">
+    <input id="thumb" placeholder="Thumbnail URL (optional)" style="flex:1;min-width:200px" />
+    <button type="button" id="add">Add</button>
+  </div>
+  <textarea id="desc" rows="2" placeholder="Description" style="width:100%;margin-bottom:12px"></textarea>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Host</th>
+        <th>Ports</th>
+        <th>Players</th>
+        <th>Visible</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    const api = location.origin;
+    const tokenEl = document.getElementById("tokenBox");
+    const statusEl = document.getElementById("status");
+    tokenEl.value = localStorage.getItem("rfd_admin_token") || "";
+
+    function headers() {
+      return {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + (tokenEl.value.trim() || localStorage.getItem("rfd_admin_token") || ""),
+      };
+    }
+
+    function setStatus(msg, isErr) {
+      statusEl.textContent = msg || "";
+      statusEl.className = isErr ? "err" : "muted";
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function load() {
+      const token = tokenEl.value.trim() || localStorage.getItem("rfd_admin_token") || "";
+      if (!token) {
+        setStatus("Enter admin token, Save, then Reload.", true);
+        return;
+      }
+      try {
+        const res = await fetch(api + "/api/admin/games", { headers: headers() });
+        if (!res.ok) {
+          setStatus("load failed: " + res.status + (res.status === 401 ? " (wrong token)" : ""), true);
+          return;
+        }
+        const list = await res.json();
+        const tb = document.getElementById("tbody");
+        tb.innerHTML = "";
+        for (const g of list) {
+          const players = Array.isArray(g.players) ? g.players : [];
+          const count = Number(g.playerCount) || players.length || 0;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${escapeHtml(g.name)}</strong><br><span class="muted">${escapeHtml(g.description || "")}</span></td>
+            <td>${escapeHtml(g.host)}</td>
+            <td>web ${g.webPort} / rcc ${g.rccPort}</td>
+            <td title="${escapeHtml(players.join(", "))}">${count}</td>
+            <td>${g.visible !== false ? "yes" : "no"}</td>
+            <td>
+              <button type="button" class="secondary" data-toggle="${g.id}">${g.visible !== false ? "Hide" : "Show"}</button>
+              <button type="button" data-del="${g.id}">Delete</button>
+            </td>`;
+          tb.appendChild(tr);
+        }
+        setStatus(list.length + " game(s)");
+        tb.querySelectorAll("[data-del]").forEach((btn) => {
+          btn.onclick = async () => {
+            if (!confirm("delete?")) return;
+            await fetch(api + "/api/admin/games/" + btn.dataset.del, { method: "DELETE", headers: headers() });
+            load();
+          };
+        });
+        tb.querySelectorAll("[data-toggle]").forEach((btn) => {
+          btn.onclick = async () => {
+            const id = btn.dataset.toggle;
+            const g = list.find((x) => x.id === id);
+            await fetch(api + "/api/admin/games/" + id, {
+              method: "PUT",
+              headers: headers(),
+              body: JSON.stringify({ visible: g.visible === false }),
+            });
+            load();
+          };
+        });
+      } catch (e) {
+        setStatus("load error: " + e.message, true);
+      }
+    }
+
+    document.getElementById("saveToken").onclick = () => {
+      localStorage.setItem("rfd_admin_token", tokenEl.value.trim());
+      setStatus("token saved");
+    };
+    document.getElementById("reload").onclick = load;
+
+    document.getElementById("add").onclick = async () => {
+      const body = {
+        name: document.getElementById("name").value.trim() || "Untitled",
+        description: document.getElementById("desc").value.trim(),
+        host: document.getElementById("host").value.trim() || "127.0.0.1",
+        webPort: Number(document.getElementById("webPort").value || 50565),
+        rccPort: Number(document.getElementById("rccPort").value || 50132),
+        thumbnail: document.getElementById("thumb").value.trim(),
+        visible: true,
+      };
+      const res = await fetch(api + "/api/admin/games", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return alert("add failed " + res.status);
+      document.getElementById("name").value = "";
+      document.getElementById("desc").value = "";
+      load();
+    };
+
+    if ((localStorage.getItem("rfd_admin_token") || "").trim()) load();
+  </script>
+</body>
+</html>
