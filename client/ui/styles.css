@@ -18,27 +18,51 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100%;
+}
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  position: relative;
 }
+
+/* App-wide game-icon collage (save image as client/ui/assets/collage.jpg) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    url("assets/collage.jpg") center center / cover no-repeat fixed;
+  background-color: #0a0b0e;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(10, 11, 14, 0.72);
+  pointer-events: none;
+}
+
 .hidden { display: none !important; }
-.view { min-height: 100vh; }
+.view { min-height: 100vh; position: relative; }
 
 /* ===== TOP NAV (matches real Roblox) ===== */
 .rbx-topnav {
   height: var(--nav-h);
-  background: rgba(17, 18, 22, 0.92);
+  background: rgba(17, 18, 22, 0.88);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   position: sticky;
   top: 0;
   z-index: 40;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
 .rbx-topnav.solid {
-  background: var(--bg-elev);
+  background: rgba(25, 26, 31, 0.9);
   border-bottom-color: var(--card-border);
 }
 .topnav-inner {
@@ -146,7 +170,7 @@ body {
 }
 .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 
-/* ===== LOGIN STAGE (real layout) ===== */
+/* ===== LOGIN STAGE ===== */
 .login-stage {
   position: relative;
   min-height: calc(100vh - var(--nav-h));
@@ -157,32 +181,13 @@ body {
   overflow: hidden;
 }
 
-/* Collage background approximating real Roblox game grid */
+/* Collage already on body — keep layer for extra dim on login only */
 .collage-bg {
   position: absolute;
   inset: 0;
-  background-color: #0a0b0e;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(0,120,200,0.18), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(180,40,40,0.12), transparent 50%),
-    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(80,40,120,0.1), transparent 50%),
-    linear-gradient(135deg, #0d1118 0%, #111216 40%, #0a0c12 100%);
   z-index: 0;
-}
-.collage-bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 120px, rgba(255,255,255,0.015) 120px, rgba(255,255,255,0.015) 121px),
-    repeating-linear-gradient(90deg, transparent, transparent 160px, rgba(255,255,255,0.015) 160px, rgba(255,255,255,0.015) 161px);
-  opacity: 0.8;
-}
-.collage-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.55) 100%);
+  background: transparent;
+  pointer-events: none;
 }
 
 .login-modal {
@@ -190,12 +195,12 @@ body {
   z-index: 1;
   width: 100%;
   max-width: 400px;
-  background: rgba(35, 37, 44, 0.96);
+  background: rgba(35, 37, 44, 0.94);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 32px 28px 28px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.55);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
 }
 .login-modal h1 {
   font-size: 24px;
@@ -316,13 +321,14 @@ body {
   gap: 16px;
 }
 .game-card {
-  background: var(--card);
+  background: rgba(35, 37, 44, 0.92);
   border: 1px solid var(--card-border);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: transform 0.15s, border-color 0.15s;
+  backdrop-filter: blur(8px);
 }
 .game-card:hover {
   transform: translateY(-2px);
@@ -386,9 +392,10 @@ body {
   align-items: start;
 }
 .card {
-  background: var(--card);
+  background: rgba(35, 37, 44, 0.92);
   border: 1px solid var(--card-border);
   border-radius: 12px;
+  backdrop-filter: blur(8px);
 }
 .card.pad { padding: 24px; }
 .avatar-side .card {
@@ -449,7 +456,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -459,10 +466,11 @@ body {
 .modal-card {
   width: 100%;
   max-width: 420px;
-  background: var(--card);
+  background: rgba(35, 37, 44, 0.96);
   border: 1px solid var(--card-border);
   border-radius: 12px;
   overflow: hidden;
+  backdrop-filter: blur(12px);
 }
 .modal-head {
   display: flex;
