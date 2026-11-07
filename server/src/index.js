@@ -10,7 +10,7 @@ const root = path.join(__dirname, "..");
 const dataDir = path.join(root, "data");
 const gamesFile = path.join(dataDir, "games.json");
 
-const PORT = Number(process.env.PORT || 3080);
+const PORT = Number(process.env.PORT || 50201);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "dev-token-change-me";
 
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });

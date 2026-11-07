@@ -1,11 +1,11 @@
 # RFD Hub — server
 
-Runs on your VPS.
+Runs on your VPS (default port **50201**).
 
 ```bash
 cd server
 npm install
-export PORT=3080
+export PORT=50201
 export ADMIN_TOKEN=change-me-long-random
 node src/index.js
 ```
@@ -24,4 +24,4 @@ Data is stored in `data/games.json` (created automatically).
 | PUT | `/api/admin/games/:id` | Bearer | update |
 | DELETE | `/api/admin/games/:id` | Bearer | delete |
 
-Admin UI is static under `/admin` (open `https://your-vps:3080/admin`).
+Admin UI: `http://YOUR_VPS:50201/admin`
