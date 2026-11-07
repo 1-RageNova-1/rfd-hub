@@ -11,6 +11,7 @@
     input, textarea, button { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #eee; }
     button { cursor: pointer; background: #e11; border-color: #c00; }
     button.secondary { background: #333; border-color: #555; }
+    button.edit { background: #1a5fb4; border-color: #3584e4; }
     .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
     table { width: 100%; border-collapse: collapse; margin-top: 16px; }
     th, td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
@@ -19,6 +20,9 @@
     #tokenBox { min-width: 280px; }
     #status { min-height: 1.2em; color: #8f8; margin: 8px 0; }
     #status.err { color: #f66; }
+    #formTitle { margin: 20px 0 8px; }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    label.check { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #ccc; }
   </style>
 </head>
 <body>
@@ -32,18 +36,23 @@
   </div>
   <p id="status" class="muted"></p>
 
-  <h2>Add game</h2>
+  <h2 id="formTitle">Add game</h2>
+  <input type="hidden" id="editId" value="" />
   <div class="row">
     <input id="name" placeholder="Name" />
-    <input id="host" placeholder="Host IP" value="127.0.0.1" />
+    <input id="host" placeholder="Host IP" value="185.45.149.198" />
     <input id="webPort" placeholder="Web port" value="50565" style="width:100px" />
     <input id="rccPort" placeholder="RCC port" value="50132" style="width:100px" />
   </div>
   <div class="row">
     <input id="thumb" placeholder="Thumbnail URL (optional)" style="flex:1;min-width:200px" />
-    <button type="button" id="add">Add</button>
+    <label class="check"><input type="checkbox" id="visible" checked /> Visible</label>
   </div>
   <textarea id="desc" rows="2" placeholder="Description" style="width:100%;margin-bottom:12px"></textarea>
+  <div class="row">
+    <button type="button" id="saveGame">Add</button>
+    <button type="button" class="secondary" id="cancelEdit" style="display:none">Cancel edit</button>
+  </div>
 
   <table>
     <thead>
@@ -63,6 +72,7 @@
     const api = location.origin;
     const tokenEl = document.getElementById("tokenBox");
     const statusEl = document.getElementById("status");
+    let gamesCache = [];
     tokenEl.value = localStorage.getItem("rfd_admin_token") || "";
 
     function headers() {
@@ -85,6 +95,47 @@
         .replace(/"/g, "&quot;");
     }
 
+    function clearForm() {
+      document.getElementById("editId").value = "";
+      document.getElementById("name").value = "";
+      document.getElementById("desc").value = "";
+      document.getElementById("host").value = "185.45.149.198";
+      document.getElementById("webPort").value = "50565";
+      document.getElementById("rccPort").value = "50132";
+      document.getElementById("thumb").value = "";
+      document.getElementById("visible").checked = true;
+      document.getElementById("formTitle").textContent = "Add game";
+      document.getElementById("saveGame").textContent = "Add";
+      document.getElementById("cancelEdit").style.display = "none";
+    }
+
+    function fillForm(g) {
+      document.getElementById("editId").value = g.id;
+      document.getElementById("name").value = g.name || "";
+      document.getElementById("desc").value = g.description || "";
+      document.getElementById("host").value = g.host || "";
+      document.getElementById("webPort").value = g.webPort ?? 50565;
+      document.getElementById("rccPort").value = g.rccPort ?? 50132;
+      document.getElementById("thumb").value = g.thumbnail || "";
+      document.getElementById("visible").checked = g.visible !== false;
+      document.getElementById("formTitle").textContent = "Edit game";
+      document.getElementById("saveGame").textContent = "Save changes";
+      document.getElementById("cancelEdit").style.display = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function formBody() {
+      return {
+        name: document.getElementById("name").value.trim() || "Untitled",
+        description: document.getElementById("desc").value.trim(),
+        host: document.getElementById("host").value.trim() || "127.0.0.1",
+        webPort: Number(document.getElementById("webPort").value || 50565),
+        rccPort: Number(document.getElementById("rccPort").value || 50132),
+        thumbnail: document.getElementById("thumb").value.trim(),
+        visible: document.getElementById("visible").checked,
+      };
+    }
+
     async function load() {
       const token = tokenEl.value.trim() || localStorage.getItem("rfd_admin_token") || "";
       if (!token) {
@@ -98,6 +149,7 @@
           return;
         }
         const list = await res.json();
+        gamesCache = list;
         const tb = document.getElementById("tbody");
         tb.innerHTML = "";
         for (const g of list) {
@@ -110,24 +162,33 @@
             <td>web ${g.webPort} / rcc ${g.rccPort}</td>
             <td title="${escapeHtml(players.join(", "))}">${count}</td>
             <td>${g.visible !== false ? "yes" : "no"}</td>
-            <td>
+            <td class="actions">
+              <button type="button" class="edit" data-edit="${g.id}">Edit</button>
               <button type="button" class="secondary" data-toggle="${g.id}">${g.visible !== false ? "Hide" : "Show"}</button>
               <button type="button" data-del="${g.id}">Delete</button>
             </td>`;
           tb.appendChild(tr);
         }
         setStatus(list.length + " game(s)");
+
+        tb.querySelectorAll("[data-edit]").forEach((btn) => {
+          btn.onclick = () => {
+            const g = gamesCache.find((x) => x.id === btn.dataset.edit);
+            if (g) fillForm(g);
+          };
+        });
         tb.querySelectorAll("[data-del]").forEach((btn) => {
           btn.onclick = async () => {
             if (!confirm("delete?")) return;
             await fetch(api + "/api/admin/games/" + btn.dataset.del, { method: "DELETE", headers: headers() });
+            if (document.getElementById("editId").value === btn.dataset.del) clearForm();
             load();
           };
         });
         tb.querySelectorAll("[data-toggle]").forEach((btn) => {
           btn.onclick = async () => {
             const id = btn.dataset.toggle;
-            const g = list.find((x) => x.id === id);
+            const g = gamesCache.find((x) => x.id === id);
             await fetch(api + "/api/admin/games/" + id, {
               method: "PUT",
               headers: headers(),
@@ -146,25 +207,16 @@
       setStatus("token saved");
     };
     document.getElementById("reload").onclick = load;
+    document.getElementById("cancelEdit").onclick = clearForm;
 
-    document.getElementById("add").onclick = async () => {
-      const body = {
-        name: document.getElementById("name").value.trim() || "Untitled",
-        description: document.getElementById("desc").value.trim(),
-        host: document.getElementById("host").value.trim() || "127.0.0.1",
-        webPort: Number(document.getElementById("webPort").value || 50565),
-        rccPort: Number(document.getElementById("rccPort").value || 50132),
-        thumbnail: document.getElementById("thumb").value.trim(),
-        visible: true,
-      };
-      const res = await fetch(api + "/api/admin/games", {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) return alert("add failed " + res.status);
-      document.getElementById("name").value = "";
-      document.getElementById("desc").value = "";
+    document.getElementById("saveGame").onclick = async () => {
+      const id = document.getElementById("editId").value.trim();
+      const body = formBody();
+      const url = id ? api + "/api/admin/games/" + id : api + "/api/admin/games";
+      const method = id ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: headers(), body: JSON.stringify(body) });
+      if (!res.ok) return alert((id ? "save" : "add") + " failed " + res.status);
+      clearForm();
       load();
     };
 
