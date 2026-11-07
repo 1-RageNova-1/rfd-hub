@@ -7,10 +7,6 @@ Install once:
 
 Run from repo root:
   python desktop/rfd_hub_app.py
-
-Optional single-file exe later:
-  pip install pyinstaller
-  pyinstaller --noconfirm --onefile --windowed --name RFDHub desktop/rfd_hub_app.py
 """
 from __future__ import annotations
 
@@ -18,6 +14,8 @@ import json
 import os
 import subprocess
 import sys
+import threading
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 try:
@@ -53,7 +51,6 @@ class Api:
     def get_config(self):
         return _load_cfg()
 
-    # aliases so either naming style works from JS
     def getConfig(self):
         return self.get_config()
 
@@ -102,6 +99,23 @@ class Api:
         return self.launch_rfd(payload)
 
 
+def _start_ui_server() -> int:
+    """Serve client/ui over HTTP so relative assets (collage.jpg) load."""
+    ui = str(UI_DIR.resolve())
+
+    class Handler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=ui, **kwargs)
+
+        def log_message(self, fmt, *args):
+            pass
+
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    port = httpd.server_address[1]
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return port
+
+
 def main() -> None:
     index = UI_DIR / "index.html"
     if not index.is_file():
@@ -109,17 +123,26 @@ def main() -> None:
         print("Run this from a full clone of rfd-hub (needs client/ui).")
         sys.exit(1)
 
+    collage = UI_DIR / "assets" / "collage.jpg"
+    if not collage.is_file():
+        print(f"Note: no collage at {collage} (login background will be plain dark)")
+    else:
+        print(f"Collage found: {collage}")
+
+    port = _start_ui_server()
+    url = f"http://127.0.0.1:{port}/index.html"
+    print(f"UI server: {url}")
+
     api = Api()
     webview.create_window(
         title="RFD Hub",
-        url=index.as_uri(),
+        url=url,
         js_api=api,
         width=1180,
         height=760,
         min_size=(900, 600),
         background_color="#191919",
     )
-    # Edge Chromium backend on modern Windows
     webview.start(debug=False)
 
 
