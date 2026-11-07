@@ -1,6 +1,5 @@
 const $ = (id) => document.getElementById(id);
 
-/** Electron (window.hub) or pywebview (window.pywebview.api) */
 function bridge() {
   if (window.hub) return window.hub;
   if (window.pywebview && window.pywebview.api) return window.pywebview.api;
@@ -11,6 +10,13 @@ let state = {
   username: localStorage.getItem("hub_user") || "",
   apiBase: "http://185.45.149.198:50201",
   avatar: null,
+};
+
+const SOON = {
+  charts: { title: "Charts", text: "Charts is coming soon." },
+  marketplace: { title: "Marketplace", text: "Marketplace is coming soon." },
+  create: { title: "Create", text: "Create is coming soon." },
+  more: { title: "More", text: "More options are coming soon." },
 };
 
 async function init() {
@@ -28,21 +34,45 @@ async function init() {
   } else {
     $("login-api").value = state.apiBase;
   }
-  if (state.username) showHome();
+  if (state.username) showShell("home");
 }
 
-function show(view) {
-  ["login", "home", "avatar"].forEach((v) => {
-    $(`view-${v}`).classList.toggle("hidden", v !== view);
-  });
+function showLogin() {
+  $("view-login").classList.remove("hidden");
+  $("view-shell").classList.add("hidden");
 }
 
-async function showHome() {
-  show("home");
+function showShell(panel) {
+  $("view-login").classList.add("hidden");
+  $("view-shell").classList.remove("hidden");
   $("top-name").textContent = state.username;
-  $("top-name-2").textContent = state.username;
-  await loadGames();
-  await loadAvatar(state.username);
+  setPanel(panel || "home");
+}
+
+function setPanel(name) {
+  ["home", "avatar", "soon"].forEach((p) => {
+    const el = $("panel-" + p);
+    if (el) el.classList.toggle("hidden", p !== name);
+  });
+  document.querySelectorAll(".rail-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.nav === name);
+  });
+  if (name === "home") {
+    loadGames();
+    loadAvatar(state.username);
+  }
+  if (name === "avatar") {
+    $("av-user").value = state.username;
+    loadAvatar(state.username);
+  }
+}
+
+function openSoon(key) {
+  const info = SOON[key] || { title: "Soon", text: "Coming soon." };
+  $("soon-title").textContent = info.title;
+  $("soon-text").textContent = info.text;
+  showShell("soon");
+  document.querySelectorAll(".rail-btn").forEach((btn) => btn.classList.remove("active"));
 }
 
 $("btn-login").onclick = async () => {
@@ -74,26 +104,25 @@ $("btn-login").onclick = async () => {
       else await b.set_config({ apiBase: api });
     } catch (_) {}
   }
-  showHome();
+  showShell("home");
 };
 
 function logout() {
   state.username = "";
   localStorage.removeItem("hub_user");
-  show("login");
+  showLogin();
 }
 $("btn-logout").onclick = logout;
-$("btn-logout-2").onclick = logout;
 
 document.querySelectorAll("[data-nav]").forEach((btn) => {
-  btn.onclick = () => {
-    if (btn.dataset.nav === "home") showHome();
-    else {
-      show("avatar");
-      $("av-user").value = state.username;
-      loadAvatar($("av-user").value.trim() || state.username);
-    }
-  };
+  btn.onclick = () => setPanel(btn.dataset.nav);
+});
+
+document.querySelectorAll("[data-soon]").forEach((el) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    openSoon(el.dataset.soon);
+  });
 });
 
 async function loadGames() {
@@ -105,20 +134,20 @@ async function loadGames() {
     $("games-empty").classList.toggle("hidden", list.length > 0);
     for (const g of list) {
       const el = document.createElement("div");
-      el.className = "game-card";
-      const thumbStyle = g.thumbnail
-        ? `style="background-image:url('${g.thumbnail.replace(/'/g, "%27")}')"`
+      el.className = "feat-card";
+      const thumb = g.thumbnail
+        ? `style="background-image:url('${String(g.thumbnail).replace(/'/g, "%27")}')"`
         : "";
       el.innerHTML = `
-        <div class="game-thumb" ${thumbStyle}></div>
-        <div class="game-body">
-          <div class="game-title"></div>
-          <div class="game-desc"></div>
-          <button type="button" class="game-join">Join</button>
-        </div>`;
-      el.querySelector(".game-title").textContent = g.name;
-      el.querySelector(".game-desc").textContent = g.description || `${g.host}:${g.webPort}`;
-      el.querySelector(".game-join").onclick = () => joinGame(g);
+        <div class="feat-thumb" ${thumb}></div>
+        <div class="feat-name"></div>
+        <div class="feat-meta">
+          <span>👍 100%</span>
+          <span>👤 1</span>
+        </div>
+        <button type="button" class="feat-join">Join</button>`;
+      el.querySelector(".feat-name").textContent = g.name || "Game";
+      el.querySelector(".feat-join").onclick = () => joinGame(g);
       box.appendChild(el);
     }
   } catch (e) {
@@ -209,12 +238,10 @@ $("modal").addEventListener("click", (e) => {
   if (e.target === $("modal")) closeSettings();
 });
 
-// pywebview injects api after DOM ready — re-init once available
 if (window.pywebview) {
   init();
 } else {
   window.addEventListener("pywebviewready", init);
-  // browser / electron path
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
