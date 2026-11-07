@@ -16,10 +16,7 @@ async function init() {
   } else {
     $("login-api").value = state.apiBase;
   }
-
-  if (state.username) {
-    showHome();
-  }
+  if (state.username) showHome();
 }
 
 function show(view) {
@@ -162,11 +159,9 @@ function openSettings() {
 function closeSettings() {
   $("modal").classList.add("hidden");
 }
-
 $("btn-settings").onclick = openSettings;
 $("set-close").onclick = closeSettings;
 $("set-close-2").onclick = closeSettings;
-
 $("set-save").onclick = async () => {
   const apiBase = $("set-api").value.trim().replace(/\/$/, "");
   const rfdPath = $("set-rfd").value.trim();
@@ -174,8 +169,6 @@ $("set-save").onclick = async () => {
   if (window.hub) await window.hub.setConfig({ apiBase, rfdPath });
   closeSettings();
 };
-
-// Close modal on overlay click
 $("modal").addEventListener("click", (e) => {
   if (e.target === $("modal")) closeSettings();
 });
