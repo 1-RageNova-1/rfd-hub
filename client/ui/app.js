@@ -41,18 +41,18 @@ $("btn-login").onclick = async () => {
   const api = $("login-api").value.trim().replace(/\/$/, "");
   $("login-err").textContent = "";
   if (!u) {
-    $("login-err").textContent = "enter a username";
+    $("login-err").textContent = "Please enter a username";
     return;
   }
   if (!api) {
-    $("login-err").textContent = "enter API URL";
+    $("login-err").textContent = "Please enter an API URL";
     return;
   }
   try {
     const r = await fetch(api + "/api/health");
     if (!r.ok) throw new Error("bad status");
   } catch {
-    $("login-err").textContent = "cant reach API — check URL / firewall";
+    $("login-err").textContent = "Can't reach API — check URL / firewall";
     return;
   }
   state.username = u;
@@ -90,25 +90,25 @@ async function loadGames() {
     $("games-empty").classList.toggle("hidden", list.length > 0);
     for (const g of list) {
       const el = document.createElement("div");
-      el.className = "card";
-      const thumb = g.thumbnail
+      el.className = "game-card";
+      const thumbStyle = g.thumbnail
         ? `style="background-image:url('${g.thumbnail.replace(/'/g, "%27")}')"`
         : "";
       el.innerHTML = `
-        <div class="thumb" ${thumb}></div>
-        <div class="body">
-          <h3></h3>
-          <p></p>
-          <button type="button" class="primary join">Join</button>
+        <div class="game-thumb" ${thumbStyle}></div>
+        <div class="game-body">
+          <div class="game-title"></div>
+          <div class="game-desc"></div>
+          <button type="button" class="game-join">Join</button>
         </div>`;
-      el.querySelector("h3").textContent = g.name;
-      el.querySelector("p").textContent = g.description || `${g.host}:${g.webPort}`;
-      el.querySelector(".join").onclick = () => joinGame(g);
+      el.querySelector(".game-title").textContent = g.name;
+      el.querySelector(".game-desc").textContent = g.description || `${g.host}:${g.webPort}`;
+      el.querySelector(".game-join").onclick = () => joinGame(g);
       box.appendChild(el);
     }
   } catch (e) {
     $("games-empty").classList.remove("hidden");
-    $("games-empty").textContent = "failed to load games: " + e.message;
+    $("games-empty").textContent = "Failed to load games: " + e.message;
   }
 }
 
@@ -123,7 +123,7 @@ async function joinGame(g) {
     rccPort: g.rccPort,
     username: state.username,
   });
-  if (!result.ok) alert(result.error || "launch failed");
+  if (!result.ok) alert(result.error || "Launch failed");
 }
 
 async function loadAvatar(username) {
@@ -136,12 +136,12 @@ async function loadAvatar(username) {
     $("av-head").src = img;
     $("av-meta").textContent = data.userId
       ? `userId ${data.userId} · ${data.source}`
-      : "user not found on Roblox — join still works with typed name";
+      : "User not found on Roblox — join still works with typed name";
     $("av-items").textContent = (data.items || []).length
-      ? "wearing asset ids: " + data.items.join(", ")
-      : "no wearing list (private or empty)";
+      ? "Wearing asset ids: " + data.items.join(", ")
+      : "No wearing list (private or empty)";
   } catch (e) {
-    $("av-meta").textContent = "avatar fetch failed: " + e.message;
+    $("av-meta").textContent = "Avatar fetch failed: " + e.message;
   }
 }
 
@@ -150,21 +150,34 @@ $("btn-refresh-av").onclick = () => {
   loadAvatar(u);
 };
 
-$("btn-settings").onclick = async () => {
+function openSettings() {
   if (window.hub) {
-    const cfg = await window.hub.getConfig();
-    $("set-api").value = cfg.apiBase || state.apiBase;
-    $("set-rfd").value = cfg.rfdPath || "";
+    window.hub.getConfig().then((cfg) => {
+      $("set-api").value = cfg.apiBase || state.apiBase;
+      $("set-rfd").value = cfg.rfdPath || "";
+    });
   }
   $("modal").classList.remove("hidden");
-};
-$("set-close").onclick = () => $("modal").classList.add("hidden");
+}
+function closeSettings() {
+  $("modal").classList.add("hidden");
+}
+
+$("btn-settings").onclick = openSettings;
+$("set-close").onclick = closeSettings;
+$("set-close-2").onclick = closeSettings;
+
 $("set-save").onclick = async () => {
   const apiBase = $("set-api").value.trim().replace(/\/$/, "");
   const rfdPath = $("set-rfd").value.trim();
   state.apiBase = apiBase;
   if (window.hub) await window.hub.setConfig({ apiBase, rfdPath });
-  $("modal").classList.add("hidden");
+  closeSettings();
 };
+
+// Close modal on overlay click
+$("modal").addEventListener("click", (e) => {
+  if (e.target === $("modal")) closeSettings();
+});
 
 init();
