@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RFD Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- LOGIN -->
+    <section id="view-login" class="view">
+      <div class="login-card">
+        <div class="logo">R</div>
+        <h1>RFD Hub</h1>
+        <p class="sub">Pick a username for this session</p>
+        <input id="login-user" type="text" placeholder="Username" maxlength="32" autocomplete="username" />
+        <input id="login-api" type="text" placeholder="API URL (VPS)" />
+        <button type="button" id="btn-login" class="primary">Continue</button>
+        <p id="login-err" class="err"></p>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section id="view-home" class="view hidden">
+      <header class="topbar">
+        <div class="brand">RFD Hub</div>
+        <nav>
+          <button type="button" class="link active" data-nav="home">Games</button>
+          <button type="button" class="link" data-nav="avatar">Avatar</button>
+        </nav>
+        <div class="userbox">
+          <img id="top-head" alt="" width="32" height="32" />
+          <span id="top-name"></span>
+          <button type="button" id="btn-settings" class="ghost" title="Settings">⚙</button>
+          <button type="button" id="btn-logout" class="ghost">Log out</button>
+        </div>
+      </header>
+      <main class="content">
+        <h2>Games</h2>
+        <div id="games" class="grid"></div>
+        <p id="games-empty" class="muted hidden">No games listed. Ask the host to add some in admin.</p>
+      </main>
+    </section>
+
+    <!-- AVATAR -->
+    <section id="view-avatar" class="view hidden">
+      <header class="topbar">
+        <div class="brand">RFD Hub</div>
+        <nav>
+          <button type="button" class="link" data-nav="home">Games</button>
+          <button type="button" class="link active" data-nav="avatar">Avatar</button>
+        </nav>
+        <div class="userbox">
+          <span id="top-name-2"></span>
+          <button type="button" id="btn-logout-2" class="ghost">Log out</button>
+        </div>
+      </header>
+      <main class="content avatar-page">
+        <div class="avatar-preview">
+          <img id="av-head" alt="headshot" width="150" height="150" />
+          <p id="av-meta" class="muted"></p>
+        </div>
+        <div>
+          <h2>Your look</h2>
+          <p class="muted">Uses Roblox <em>currently wearing</em> when inventory is private.</p>
+          <button type="button" id="btn-refresh-av" class="secondary">Refresh from Roblox</button>
+          <label class="block">Override username for avatar fetch
+            <input id="av-user" type="text" />
+          </label>
+          <p id="av-items" class="mono"></p>
+        </div>
+      </main>
+    </section>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Settings</h3>
+        <label class="block">API base URL
+          <input id="set-api" type="text" />
+        </label>
+        <label class="block">Path to RFD.exe
+          <input id="set-rfd" type="text" placeholder="C:\rfd\RFD.exe" />
+        </label>
+        <div class="row">
+          <button type="button" id="set-save" class="primary">Save</button>
+          <button type="button" id="set-close" class="secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
