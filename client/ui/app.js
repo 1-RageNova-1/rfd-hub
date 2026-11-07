@@ -1,5 +1,12 @@
 const $ = (id) => document.getElementById(id);
 
+/** Electron (window.hub) or pywebview (window.pywebview.api) */
+function bridge() {
+  if (window.hub) return window.hub;
+  if (window.pywebview && window.pywebview.api) return window.pywebview.api;
+  return null;
+}
+
 let state = {
   username: localStorage.getItem("hub_user") || "",
   apiBase: "http://185.45.149.198:50201",
@@ -7,12 +14,17 @@ let state = {
 };
 
 async function init() {
-  if (window.hub) {
-    const cfg = await window.hub.getConfig();
-    state.apiBase = cfg.apiBase || state.apiBase;
-    $("login-api").value = state.apiBase;
-    $("set-api").value = state.apiBase;
-    $("set-rfd").value = cfg.rfdPath || "";
+  const b = bridge();
+  if (b) {
+    try {
+      const cfg = await (b.getConfig ? b.getConfig() : b.get_config());
+      state.apiBase = cfg.apiBase || state.apiBase;
+      $("login-api").value = state.apiBase;
+      $("set-api").value = state.apiBase;
+      $("set-rfd").value = cfg.rfdPath || "";
+    } catch (_) {
+      $("login-api").value = state.apiBase;
+    }
   } else {
     $("login-api").value = state.apiBase;
   }
@@ -55,7 +67,13 @@ $("btn-login").onclick = async () => {
   state.username = u;
   state.apiBase = api;
   localStorage.setItem("hub_user", u);
-  if (window.hub) await window.hub.setConfig({ apiBase: api });
+  const b = bridge();
+  if (b) {
+    try {
+      if (b.setConfig) await b.setConfig({ apiBase: api });
+      else await b.set_config({ apiBase: api });
+    } catch (_) {}
+  }
   showHome();
 };
 
@@ -110,17 +128,27 @@ async function loadGames() {
 }
 
 async function joinGame(g) {
-  if (!window.hub) {
-    alert(`Run on desktop app to launch RFD.\n\nWould run:\nplayer -h ${g.host} -p ${g.webPort} -rp ${g.rccPort} -u ${state.username}`);
+  const b = bridge();
+  if (!b) {
+    alert(
+      `Desktop app required to launch RFD.\n\nWould run:\nplayer -h ${g.host} -p ${g.webPort} -rp ${g.rccPort} -u ${state.username}`
+    );
     return;
   }
-  const result = await window.hub.launchRfd({
+  const payload = {
     host: g.host,
     webPort: g.webPort,
     rccPort: g.rccPort,
     username: state.username,
-  });
-  if (!result.ok) alert(result.error || "Launch failed");
+  };
+  let result;
+  try {
+    result = b.launchRfd ? await b.launchRfd(payload) : await b.launch_rfd(payload);
+  } catch (e) {
+    alert(String(e.message || e));
+    return;
+  }
+  if (!result || !result.ok) alert((result && result.error) || "Launch failed");
 }
 
 async function loadAvatar(username) {
@@ -148,8 +176,10 @@ $("btn-refresh-av").onclick = () => {
 };
 
 function openSettings() {
-  if (window.hub) {
-    window.hub.getConfig().then((cfg) => {
+  const b = bridge();
+  if (b) {
+    const p = b.getConfig ? b.getConfig() : b.get_config();
+    Promise.resolve(p).then((cfg) => {
       $("set-api").value = cfg.apiBase || state.apiBase;
       $("set-rfd").value = cfg.rfdPath || "";
     });
@@ -166,11 +196,28 @@ $("set-save").onclick = async () => {
   const apiBase = $("set-api").value.trim().replace(/\/$/, "");
   const rfdPath = $("set-rfd").value.trim();
   state.apiBase = apiBase;
-  if (window.hub) await window.hub.setConfig({ apiBase, rfdPath });
+  const b = bridge();
+  if (b) {
+    try {
+      if (b.setConfig) await b.setConfig({ apiBase, rfdPath });
+      else await b.set_config({ apiBase, rfdPath });
+    } catch (_) {}
+  }
   closeSettings();
 };
 $("modal").addEventListener("click", (e) => {
   if (e.target === $("modal")) closeSettings();
 });
 
-init();
+// pywebview injects api after DOM ready — re-init once available
+if (window.pywebview) {
+  init();
+} else {
+  window.addEventListener("pywebviewready", init);
+  // browser / electron path
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+}
