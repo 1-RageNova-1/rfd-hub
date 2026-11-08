@@ -487,3 +487,128 @@ body::before {
   .side-rail { width: 56px; }
   .panel { padding: 16px; }
 }
+
+/* ===== Mobile / Android adaptations (desktop ≥768px unchanged) ===== */
+@media (max-width: 767px) {
+  :root {
+    --rail-w: 56px;
+  }
+
+  .topnav-links,
+  .nav-search-pill {
+    display: none;
+  }
+  .topnav-inner {
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .btn-signup {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .login-stage {
+    padding: 16px 12px;
+    min-height: calc(100vh - var(--nav-h) - 40px);
+  }
+  .login-modal {
+    padding: 24px 18px 20px;
+    max-width: 100%;
+  }
+  .login-modal h1 {
+    font-size: 20px;
+  }
+
+  .shell {
+    flex-direction: row;
+  }
+  .side-rail {
+    width: var(--rail-w);
+    height: 100vh;
+    padding: 8px 0;
+    position: sticky;
+    top: 0;
+  }
+  .rail-btn {
+    width: 48px;
+    padding: 8px 2px;
+    min-height: 48px;
+  }
+  .rail-ico { font-size: 16px; }
+  .rail-lbl { font-size: 9px; }
+
+  .shell-top {
+    padding: 10px 12px;
+  }
+  .user-name {
+    max-width: 90px;
+    font-size: 13px;
+  }
+  .icon-btn {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 8px;
+  }
+
+  .panel {
+    padding: 14px 12px 64px;
+  }
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+
+  .featured-row {
+    justify-content: flex-start;
+  }
+  .feat-card {
+    width: calc(50% - 7px);
+    min-width: 140px;
+    max-width: 180px;
+  }
+  .feat-join {
+    min-height: 36px;
+  }
+
+  .connect-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .connect-title { font-size: 13px; }
+  .connect-sub { font-size: 12px; }
+
+  .avatar-page {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .av-preview img {
+    width: 140px;
+    height: 140px;
+  }
+
+  .app-footer {
+    font-size: 10px;
+    right: 8px;
+    bottom: 6px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    margin: 0 4px;
+  }
+  .modal-foot {
+    flex-direction: column;
+  }
+  .modal-foot .btn-login,
+  .modal-foot .btn-secondary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .feat-card {
+    width: 100%;
+    max-width: none;
+  }
+  .user-name { display: none; }
+}
