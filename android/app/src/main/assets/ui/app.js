@@ -177,6 +177,14 @@ async function reportPresence(g) {
   } catch (_) {}
 }
 
+function parseBridgeResult(raw) {
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    try { return JSON.parse(raw); } catch { return { ok: false, error: raw }; }
+  }
+  return raw;
+}
+
 async function joinGame(g) {
   await reportPresence(g);
   const b = bridge();
@@ -195,12 +203,17 @@ async function joinGame(g) {
   };
   let result;
   try {
-    result = b.launchRfd ? await b.launchRfd(payload) : await b.launch_rfd(payload);
+    // Android WebView requires a JSON string; Electron/pywebview accept an object.
+    const arg = (window.hub && !window.pywebview) ? JSON.stringify(payload) : payload;
+    const raw = b.launchRfd ? await b.launchRfd(arg) : await b.launch_rfd(payload);
+    result = parseBridgeResult(raw);
   } catch (e) {
     alert(String(e.message || e));
     return;
   }
-  if (!result || !result.ok) alert((result && result.error) || "Launch failed");
+  if (!result || !result.ok) {
+    alert((result && result.error) || "Launch failed");
+  }
   loadGames();
 }
 
