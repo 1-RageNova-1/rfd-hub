@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.ragenova.rfdhub.app-debug-4:/xml_network_security_config.xml.flat",
+        "source": "com.ragenova.rfdhub.app-main-6:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.ragenova.rfdhub.app-debug-4:/layout_activity_main.xml.flat",
+        "source": "com.ragenova.rfdhub.app-main-6:/layout/activity_main.xml"
+    }
+]

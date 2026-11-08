@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RFD Hub</string>
+    <style name="Theme.RFDHub" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">#191919</item>
+        <item name="android:navigationBarColor">#191919</item>
+        <item name="android:windowBackground">#191919</item>
+    </style>
+</resources>
