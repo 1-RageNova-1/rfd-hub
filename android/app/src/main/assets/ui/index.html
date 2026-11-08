@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CattyClient</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- ========== LOGIN ========== -->
+    <section id="view-login" class="view">
+      <header class="rbx-topnav">
+        <div class="topnav-inner">
+          <a class="nav-logo" href="#">
+            <svg width="118" height="30" viewBox="0 0 118 30" fill="none">
+              <path d="M15 3L25 10V20L15 27L5 20V10L15 3Z" fill="#E2231A"/>
+              <path d="M15 8L20 11.5V18.5L15 22L10 18.5V11.5L15 8Z" fill="white"/>
+              <text x="32" y="21" fill="white" font-family="Source Sans 3, Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="0.5">ROBLOX</text>
+            </svg>
+          </a>
+          <nav class="topnav-links">
+            <a href="#" data-soon="charts">Charts</a>
+            <a href="#" data-soon="marketplace">Marketplace</a>
+            <a href="#" data-soon="create">Create</a>
+          </nav>
+          <div class="topnav-right">
+            <div class="nav-search-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" placeholder="Search" disabled />
+            </div>
+            <button type="button" class="btn-signup" disabled>Sign Up</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="login-stage">
+        <div class="collage-bg" aria-hidden="true"></div>
+        <div class="login-modal">
+          <h1>Login to Roblox</h1>
+          <div class="field">
+            <input id="login-user" type="text" maxlength="32" autocomplete="username" placeholder="Username/Email/Phone" />
+          </div>
+          <div class="field">
+            <input id="login-api" type="text" placeholder="API URL (VPS)" />
+          </div>
+          <button type="button" id="btn-login" class="btn-login">Log In</button>
+          <p id="login-err" class="err"></p>
+          <a href="#" class="forgot-link">Forgot Password or Username?</a>
+          <div class="or-line"><span></span></div>
+          <button type="button" class="btn-alt" disabled>Email Me a One-Time Code</button>
+          <button type="button" class="btn-alt" disabled>Quick Sign-in</button>
+          <p class="signup-row">Don't have an account? <a href="#">Sign Up</a></p>
+        </div>
+      </div>
+      <footer class="app-footer">© 2026 CattyClient. All rights reserved.</footer>
+    </section>
+
+    <!-- ========== SHELL (after login) ========== -->
+    <section id="view-shell" class="view hidden">
+      <div class="shell">
+        <aside class="side-rail">
+          <button type="button" class="rail-btn active" data-nav="home" title="Home">
+            <span class="rail-ico">⌂</span>
+            <span class="rail-lbl">Home</span>
+          </button>
+          <button type="button" class="rail-btn" data-soon="charts" title="Charts">
+            <span class="rail-ico">▥</span>
+            <span class="rail-lbl">Charts</span>
+          </button>
+          <button type="button" class="rail-btn" data-nav="avatar" title="Avatar">
+            <span class="rail-ico">☺</span>
+            <span class="rail-lbl">Avatar</span>
+          </button>
+          <button type="button" class="rail-btn" data-soon="more" title="More">
+            <span class="rail-ico">⋯</span>
+            <span class="rail-lbl">More</span>
+          </button>
+        </aside>
+
+        <div class="shell-main">
+          <header class="shell-top">
+            <div class="shell-brand">
+              <svg width="28" height="28" viewBox="0 0 30 30" fill="none">
+                <path d="M15 3L25 10V20L15 27L5 20V10L15 3Z" fill="#E2231A"/>
+                <path d="M15 8L20 11.5V18.5L15 22L10 18.5V11.5L15 8Z" fill="white"/>
+              </svg>
+              <span>Roblox</span>
+            </div>
+            <div class="user-chip">
+              <img id="top-head" class="user-avatar" alt="" width="32" height="32" />
+              <span id="top-name" class="user-name"></span>
+              <button type="button" id="btn-settings" class="icon-btn" title="Settings">⚙</button>
+              <button type="button" id="btn-logout" class="icon-btn" title="Log out">⎋</button>
+            </div>
+          </header>
+
+          <!-- HOME -->
+          <main id="panel-home" class="panel">
+            <h1 class="page-title">Home</h1>
+
+            <section class="block">
+              <div class="block-head">
+                <h2>Connections</h2>
+                <span class="chev">›</span>
+              </div>
+              <div class="connect-card">
+                <div class="connect-plus">+</div>
+                <div>
+                  <div class="connect-title">Connections make Roblox fun!</div>
+                  <div class="connect-sub">Add people you already know or discover new Connections</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="block">
+              <div class="block-head">
+                <h2>Featured</h2>
+              </div>
+              <div id="games" class="featured-row"></div>
+              <p id="games-empty" class="empty-state hidden">No games listed. Ask the host to add some in admin.</p>
+            </section>
+          </main>
+
+          <!-- AVATAR -->
+          <main id="panel-avatar" class="panel hidden">
+            <h1 class="page-title">Avatar</h1>
+            <div class="avatar-page">
+              <aside class="avatar-side">
+                <div class="card">
+                  <div class="av-preview">
+                    <img id="av-head" alt="Avatar" width="180" height="180" />
+                  </div>
+                  <p id="av-meta" class="meta"></p>
+                  <button type="button" id="btn-refresh-av" class="btn-secondary full">Refresh from Roblox</button>
+                </div>
+              </aside>
+              <div class="avatar-main">
+                <div class="card pad">
+                  <label class="lbl">Override username for avatar fetch</label>
+                  <input id="av-user" type="text" />
+                  <p id="av-items" class="asset-list"></p>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <!-- SOON -->
+          <main id="panel-soon" class="panel hidden">
+            <h1 class="page-title" id="soon-title">Soon</h1>
+            <div class="soon-box">
+              <div class="soon-badge">COMING SOON</div>
+              <p id="soon-text">This section is not available yet.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+      <footer class="app-footer">© 2026 CattyClient. All rights reserved.</footer>
+    </section>
+
+    <!-- SETTINGS -->
+    <div id="modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2>Settings</h2>
+          <button type="button" id="set-close" class="icon-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <label class="lbl">API base URL</label>
+          <input id="set-api" type="text" />
+          <label class="lbl">Path to RFD.exe</label>
+          <input id="set-rfd" type="text" placeholder="C:\rfd\RFD.exe" />
+        </div>
+        <div class="modal-foot">
+          <button type="button" id="set-save" class="btn-login">Save</button>
+          <button type="button" id="set-close-2" class="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
